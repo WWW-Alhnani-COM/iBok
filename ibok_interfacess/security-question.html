@@ -1,0 +1,526 @@
+// src/app/translator/drafts/page.tsx
+"use client";
+
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { apiClient } from '@/lib/api-client';
+import { useAuth } from '@/context/AuthContext';
+import { Assignment, TranslationResponseDto, Project } from '@/types';
+import { 
+  Loader2, 
+  FileText, 
+  Clock, 
+  Search, 
+  Filter,
+  Edit,
+  Eye,
+  Trash2,
+  Send,
+  Copy,
+  Calendar,
+  Globe,
+  CheckCircle,
+  AlertTriangle,
+  Clock4,
+  Folder,
+  ArrowDown,
+  ArrowUp,
+  Diff,
+  UploadCloud,
+  Check,
+  X
+} from 'lucide-react';
+import { toast } from '@/components/ui/use-toast';
+import { useRouter } from 'next/navigation';
+
+export default function DraftsPage() {
+  const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [projects, setProjects] = useState<Record<number, Project>>({});
+  const [loading, setLoading] = useState(true);
+  const [loadingDetails, setLoadingDetails] = useState<Record<string, boolean>>({});
+  const [assignmentDrafts, setAssignmentDrafts] = useState<Record<string, TranslationResponseDto[]>>({});
+  const [selectedDrafts, setSelectedDrafts] = useState<number[]>([]);
+  const [expandedProjects, setExpandedProjects] = useState<number[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterProject, setFilterProject] = useState('all');
+  const [filterLanguage, setFilterLanguage] = useState('all');
+  const [filterDate, setFilterDate] = useState('all');
+  const [filterAge, setFilterAge] = useState('all');
+  const { user } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (user?.userId) {
+      fetchUserAssignments();
+    }
+  }, [user]);
+
+  const fetchUserAssignments = async () => {
+    if (!user) return;
+    try {
+      setLoading(true);
+      const data = await apiClient.get('Assignments/user/' + user.userId);
+      setAssignments(data || []);
+      
+      // جلب معلومات المشاريع
+      const uniqueProjectIds = [...new Set(data?.map((a: Assignment) => a.projectId) || [])];
+      for (const id of uniqueProjectIds) {
+        if (!projects[id]) {
+          try {
+            const projData = await apiClient.get('Projects/' + id);
+            setProjects(prev => ({ ...prev, [id]: projData }));
+          } catch (e) {
+            console.error(`Failed to fetch project ${id}:`, e);
+          }
+        }
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "خطأ",
+        description: "فشل في جلب مهامك",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchDrafts = async (assignmentId: number) => {
+    const key = assignmentId.toString();
+    if (assignmentDrafts[key]) return;
+    if (loadingDetails[key]) return;
+
+    setLoadingDetails(prev => ({ ...prev, [key]: true }));
+    try {
+      const translationsData = await apiClient.get('Translations/assignment/' + assignmentId);
+      const drafts = translationsData?.filter((t: TranslationResponseDto) => t.status === 'Draft' || t.status === 'In Progress') || [];
+
+      setAssignmentDrafts(prev => ({
+        ...prev,
+        [key]: drafts
+      }));
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "خطأ",
+        description: `فشل في جلب مسودات المهمة ${assignmentId}`,
+      });
+    } finally {
+      setLoadingDetails(prev => {
+        const newState = { ...prev };
+        delete newState[key];
+        return newState;
+      });
+    }
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "Draft":
+        return <Badge variant="outline">مسودة</Badge>;
+      case "In Progress":
+        return <Badge variant="secondary">قيد التنفيذ</Badge>;
+      case "Submitted":
+        return <Badge variant="secondary">مُرسلة للمراجعة</Badge>;
+      default:
+        return <Badge>{status}</Badge>;
+    }
+  };
+
+  const getDraftStatusColor = (lastUpdated: string) => {
+    const now = new Date();
+    const updated = new Date(lastUpdated);
+    const diffInDays = Math.floor((now.getTime() - updated.getTime()) / (1000 * 60 * 60 * 24));
+    if (diffInDays <= 1) return 'bg-green-500';
+    if (diffInDays <= 7) return 'bg-yellow-500';
+    return 'bg-orange-500';
+  };
+
+  const handleSelectDraft = (translationId: number) => {
+    setSelectedDrafts(prev => 
+      prev.includes(translationId) 
+        ? prev.filter(id => id !== translationId) 
+        : [...prev, translationId]
+    );
+  };
+
+  const handleSelectAllInAssignment = (assignmentId: number) => {
+    const key = assignmentId.toString();
+    const drafts = assignmentDrafts[key] || [];
+    const allSelected = drafts.every(d => selectedDrafts.includes(d.translationId));
+    if (allSelected) {
+      setSelectedDrafts(prev => prev.filter(id => !drafts.some(d => d.translationId === id)));
+    } else {
+      const newSelections = drafts.map(d => d.translationId);
+      setSelectedDrafts(prev => [...new Set([...prev, ...newSelections])]);
+    }
+  };
+
+  const handleAction = async (action: 'submit' | 'delete', ids: number[]) => {
+    if (ids.length === 0) return;
+
+    let successMessage = '';
+    let errorMessage = '';
+
+    try {
+      for (const id of ids) {
+        if (action === 'submit') {
+          await apiClient.patch('Translations/' + id + '/submit', null);
+          successMessage = 'تم تسليم المسودات المحددة.';
+          errorMessage = 'فشل في تسليم بعض المسودات.';
+        } else if (action === 'delete') {
+          await apiClient.delete('Translations/' + id);
+          successMessage = 'تم حذف المسودات المحددة.';
+          errorMessage = 'فشل في حذف بعض المسودات.';
+        }
+      }
+      toast({
+        title: "نجاح",
+        description: successMessage,
+      });
+      // تحديث البيانات بعد الإجراء
+      setAssignmentDrafts(prev => {
+        const newPrev = { ...prev };
+        Object.keys(newPrev).forEach(key => {
+          const assignmentId = parseInt(key as string);
+          newPrev[key as string] = newPrev[key as string].filter(d => !ids.includes(d.translationId));
+        });
+        return newPrev;
+      });
+      setSelectedDrafts(prev => prev.filter(id => !ids.includes(id)));
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "خطأ",
+        description: errorMessage,
+      });
+    }
+  };
+
+  const handleToggleProject = (projectId: number) => {
+    setExpandedProjects(prev => 
+      prev.includes(projectId) 
+        ? prev.filter(id => id !== projectId) 
+        : [...prev, projectId]
+    );
+  };
+
+  const calculateStats = (drafts: TranslationResponseDto[]) => {
+    let totalDrafts = 0;
+    let activeDrafts = 0;
+    let staleDrafts = 0;
+    let readyDrafts = 0;
+
+    drafts.forEach(draft => {
+      totalDrafts++;
+      const now = new Date();
+      const updated = new Date(draft.updatedAt || draft.createdAt);
+      const diffInDays = Math.floor((now.getTime() - updated.getTime()) / (1000 * 60 * 60 * 24));
+      if (diffInDays <= 1) activeDrafts++;
+      if (diffInDays > 7) staleDrafts++;
+      if (draft.status === 'In Progress' && draft.finalWordCount > 0) readyDrafts++;
+    });
+
+    return { totalDrafts, activeDrafts, staleDrafts, readyDrafts };
+  };
+
+  const filteredAssignments = assignments.filter(assignment => {
+    const project = projects[assignment.projectId];
+    const key = assignment.assignmentId.toString();
+    const matchesSearch = assignment.projectName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          assignment.targetLanguageName.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesProject = filterProject === 'all' || project?.projectName === filterProject;
+    const matchesLanguage = filterLanguage === 'all' || assignment.targetLanguageName === filterLanguage;
+    const hasDrafts = assignmentDrafts[key]?.length > 0;
+    return matchesSearch && matchesProject && matchesLanguage && hasDrafts;
+  });
+
+  // حساب الإحصائيات
+  const allDrafts = Object.values(assignmentDrafts).flat();
+  const { totalDrafts, activeDrafts, staleDrafts, readyDrafts } = calculateStats(allDrafts);
+
+  if (loading) {
+    return (
+      <div className="container mx-auto py-10 flex justify-center items-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto py-10">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+        <div>
+          <h1 className="text-3xl font-bold">مسوداتي</h1>
+          <p className="text-muted-foreground mt-2">
+            إدارة المسودات المحفوظة والترجمات غير المسلمة
+          </p>
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <Badge variant="outline">
+              <span className="mr-1">الإجمالي:</span> {totalDrafts}
+            </Badge>
+            <Badge variant="outline">
+              <span className="mr-1">نشطة:</span> {activeDrafts}
+            </Badge>
+            <Badge variant="outline">
+              <span className="mr-1">قديمة:</span> {staleDrafts}
+            </Badge>
+            <Badge variant="outline">
+              <span className="mr-1">جاهزة:</span> {readyDrafts}
+            </Badge>
+          </div>
+          <Button onClick={() => router.push('/translator/translations')}>
+            العودة للترجمات
+          </Button>
+        </div>
+      </div>
+
+      {/* أدوات البحث والتصفية والإجراءات */}
+      <Card className="mb-6">
+        <CardContent className="p-4 flex flex-col md:flex-row gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute right-3 top-3 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="البحث في المشاريع أو اللغات..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Select value={filterProject} onValueChange={setFilterProject}>
+              <SelectTrigger className="w-[140px]">
+                <SelectValue placeholder="المشروع" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">جميع المشاريع</SelectItem>
+                {Array.from(new Set(assignments.map(a => projects[a.projectId]?.projectName).filter(Boolean) as string[])).map(name => (
+                  <SelectItem key={name} value={name}>{name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={filterLanguage} onValueChange={setFilterLanguage}>
+              <SelectTrigger className="w-[140px]">
+                <SelectValue placeholder="اللغة" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">جميع اللغات</SelectItem>
+                {Array.from(new Set(assignments.map(a => a.targetLanguageName))).map(lang => (
+                  <SelectItem key={lang} value={lang}>{lang}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={filterAge} onValueChange={setFilterAge}>
+              <SelectTrigger className="w-[140px]">
+                <SelectValue placeholder="الحالة" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">جميع الحالات</SelectItem>
+                <SelectItem value="active">نشطة</SelectItem>
+                <SelectItem value="stale">قديمة</SelectItem>
+                <SelectItem value="ready">جاهزة للتسليم</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => handleAction('submit', selectedDrafts)}
+              disabled={selectedDrafts.length === 0}
+            >
+              <Send className="h-4 w-4 mr-2" />
+              تسليم محدد
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => handleAction('delete', selectedDrafts)}
+              disabled={selectedDrafts.length === 0}
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              حذف محدد
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {filteredAssignments.length === 0 ? (
+        <div className="text-center py-12">
+          <FileText className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+          <h3 className="text-xl font-medium mb-1">لا توجد مسودات</h3>
+          <p className="text-muted-foreground">
+            لا توجد مسودات محفوظة في المهام الحالية.
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-8">
+          {Array.from(new Set(filteredAssignments.map(a => a.projectId))).map(projectId => {
+            const project = projects[projectId];
+            const projectAssignments = filteredAssignments.filter(a => a.projectId === projectId);
+            const projectDrafts = projectAssignments.flatMap(a => {
+              const key = a.assignmentId.toString();
+              return assignmentDrafts[key] || [];
+            });
+            const isExpanded = expandedProjects.includes(projectId);
+            
+            return (
+              <Card key={projectId}>
+                <CardHeader className="pb-2">
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => handleToggleProject(projectId)}
+                      >
+                        {isExpanded ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />}
+                      </Button>
+                      <div className="flex items-center gap-2">
+                        <Folder className="h-5 w-5 text-muted-foreground" />
+                        <CardTitle className="text-xl cursor-pointer" onClick={() => router.push(`/translator/projects/${projectId}`)}>
+                          {project?.projectName || 'مشروع غير محدد'}
+                        </CardTitle>
+                      </div>
+                      <Badge variant="outline">
+                        {projectDrafts.length} مسودة
+                      </Badge>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline">
+                        {project?.sourceLanguageName || 'اللغة المصدر'} → 
+                        {project?.targetLanguages?.map(l => l.languageName).join(', ') || 'لا توجد لغات'}
+                      </Badge>
+                    </div>
+                  </div>
+                </CardHeader>
+                {isExpanded && (
+                  <CardContent>
+                    <div className="space-y-4">
+                      {projectAssignments.map(assignment => {
+                        const key = assignment.assignmentId.toString();
+                        const drafts = assignmentDrafts[key] || [];
+                        const isDetailsLoading = loadingDetails[key];
+                        const allSelected = drafts.length > 0 && drafts.every(d => selectedDrafts.includes(d.translationId));
+
+                        if (drafts.length === 0) {
+                          fetchDrafts(assignment.assignmentId);
+                          return null;
+                        }
+
+                        return (
+                          <Card key={assignment.assignmentId} className="border">
+                            <CardContent className="p-4">
+                              <div className="flex items-start gap-3">
+                                <input
+                                  type="checkbox"
+                                  checked={allSelected}
+                                  onChange={() => handleSelectAllInAssignment(assignment.assignmentId)}
+                                  className="h-4 w-4 mt-1"
+                                />
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex justify-between">
+                                    <div>
+                                      <h4 className="font-medium">{assignment.projectName} - {assignment.targetLanguageName}</h4>
+                                      <p className="text-sm text-muted-foreground">المهمة #{assignment.assignmentId}</p>
+                                    </div>
+                                    <div className="flex flex-col items-end gap-1">
+                                      {getStatusBadge(assignment.status)}
+                                      <div className="flex items-center text-xs text-muted-foreground">
+                                        <Clock4 className="h-3 w-3 mr-1" />
+                                        <span>{new Date(assignment.deadline).toLocaleDateString('ar-EG')}</span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  
+                                  <div className="mt-3 space-y-2">
+                                    {drafts.map((draft) => {
+                                      const lastUpdated = new Date(draft.updatedAt || draft.createdAt);
+                                      const diffInDays = Math.floor((new Date().getTime() - lastUpdated.getTime()) / (1000 * 60 * 60 * 24));
+                                      const isSelected = selectedDrafts.includes(draft.translationId);
+
+                                      return (
+                                        <div key={draft.translationId} className="border rounded p-3">
+                                          <div className="flex items-start gap-2">
+                                            <input
+                                              type="checkbox"
+                                              checked={isSelected}
+                                              onChange={() => handleSelectDraft(draft.translationId)}
+                                              className="h-4 w-4 mt-1"
+                                            />
+                                            <div className="flex-1 min-w-0">
+                                              <div className="flex justify-between">
+                                                <div>
+                                                  <h5 className="font-medium">الفقرة #{draft.paragraphId}</h5>
+                                                  <p className="text-sm text-muted-foreground truncate">{draft.originalText}</p>
+                                                </div>
+                                                <div className="flex flex-col items-end gap-1">
+                                                  {getStatusBadge(draft.status)}
+                                                  <Badge variant="outline" className={`px-1 py-0 h-5 ${getDraftStatusColor(draft.updatedAt || draft.createdAt)}`}>
+                                                    {diffInDays <= 1 ? 'نشطة' : diffInDays <= 7 ? 'خاملة' : 'قديمة'}
+                                                  </Badge>
+                                                </div>
+                                              </div>
+                                              <div className="mt-2 text-sm truncate">
+                                                <span className="text-muted-foreground">الترجمة: </span>
+                                                <span>{draft.translatedText || 'لا توجد ترجمة بعد'}</span>
+                                              </div>
+                                              <div className="mt-1 text-xs text-muted-foreground flex justify-between">
+                                                <span>الكلمات: {draft.finalWordCount || 0}</span>
+                                                <span>{lastUpdated.toLocaleDateString('ar-EG')}</span>
+                                              </div>
+                                            </div>
+                                            <div className="flex flex-col gap-1">
+                                              <Button 
+                                                size="sm" 
+                                                variant="outline"
+                                                onClick={() => router.push(`/translator/projects/${assignment.projectId}#paragraph-${draft.paragraphId}`)}
+                                                title="استئناف التحرير"
+                                              >
+                                                <Edit className="h-3 w-3" />
+                                              </Button>
+                                              <Button 
+                                                size="sm" 
+                                                variant="outline"
+                                                onClick={() => handleAction('submit', [draft.translationId])}
+                                                title="تسليم الآن"
+                                              >
+                                                <Send className="h-3 w-3" />
+                                              </Button>
+                                              <Button 
+                                                size="sm" 
+                                                variant="outline"
+                                                onClick={() => handleAction('delete', [draft.translationId])}
+                                                title="حذف"
+                                              >
+                                                <Trash2 className="h-3 w-3" />
+                                              </Button>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        );
+                      })}
+                    </div>
+                  </CardContent>
+                )}
+              </Card>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}

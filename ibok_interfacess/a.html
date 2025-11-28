@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>iBOK - نسيت كلمة المرور</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+/* ==================================================
+   تصميم الحقول متطابق مع تسجيل الدخول
+================================================== */
+.container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: calc(100vh - 160px);
+    padding: 2rem;
+}
+
+.form-container {
+    background: #fff;
+    border-radius: 12px;
+    padding: 2.5rem;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+    max-width: 450px;
+    width: 100%;
+    animation: slideUp 0.4s ease-out;
+}
+
+@keyframes slideUp {
+    from { opacity:0; transform:translateY(20px); }
+    to { opacity:1; transform:translateY(0); }
+}
+
+h1 {
+    text-align: center;
+    color: var(--primary-red);
+    margin-bottom: 1.5rem;
+    font-size: 1.6rem;
+    font-weight: 600;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 1rem;
+}
+
+.form-label {
+    font-weight: 600;
+    margin-bottom: 5px;
+    color: var(--text-dark);
+}
+
+/* wrapper للحقل مع الأيقونة */
+.input-wrapper {
+    position: relative;
+}
+
+.form-input {
+    width: 100%;
+    padding: 0.75rem 2.5rem 0.75rem 1rem; /* مسافة للأيقونة */
+    font-size: 0.95rem;
+    border: 2px dashed var(--secondary-cyan);
+    border-radius: 6px;
+    transition: all 0.3s ease;
+    background: var(--white);
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: var(--secondary-cyan);
+    box-shadow: 0 0 0 3px rgba(0,188,212,0.1);
+}
+
+.input-icon {
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.2rem;
+    pointer-events: none;
+    color: var(--text-light);
+}
+
+.input-hint {
+    font-size: 0.8rem;
+    color: var(--text-light);
+    margin-top: 0.25rem;
+}
+
+/* زر الإرسال */
+.btn-action {
+    width: 100%;
+    padding: 0.9rem;
+    margin-top: 1rem;
+    background: linear-gradient(90deg, var(--primary-red) 0%, var(--primary-dark-red) 100%);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.btn-action:hover {
+    background: linear-gradient(90deg, var(--primary-dark-red) 0%, var(--primary-red) 100%);
+    transform: translateY(-2px);
+}
+
+.back-link {
+    display: block;
+    text-align: center;
+    margin-top: 1rem;
+    color: var(--secondary-purple);
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.back-link:hover {
+    color: var(--primary-red);
+    text-decoration: underline;
+}
+
+.toast {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #4CAF50;
+    color: #fff;
+    padding: 1rem 1.5rem;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(76,175,80,0.3);
+    display: none;
+    z-index: 1000;
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+    <div class="header-content">
+        <div class="logo-section">
+            <span class="logo-text">iBOK</span>
+            <span class="logo-subtitle">الخدمات المصرفية عبر الإنترنت</span>
+        </div>
+        <div class="header-warning">
+            <span class="warning-icon">⚠️</span>
+            <span class="warning-text">مرحباً بكم في خدمة IBOK المصرفية عبر الإنترنت</span>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="form-container">
+        <h1>نسيت كلمة المرور</h1>
+        <form id="forgotForm">
+            <div class="form-group">
+                <label for="accountID" class="form-label">رقم الحساب أو البريد الإلكتروني</label>
+                <div class="input-wrapper">
+                    <input type="text" id="accountID" class="form-input" placeholder="أدخل رقم الحساب أو البريد" required>
+                    <span class="input-icon">👤</span>
+                </div>
+                <small class="input-hint">أدخل رقم الحساب المكون من 7 أرقام أو البريد الإلكتروني المسجل</small>
+            </div>
+            <button type="submit" class="btn-action">
+                <span class="btn-icon">📧</span> إرسال رمز الاسترجاع
+            </button>
+        </form>
+        <a href="login.html" class="back-link">العودة إلى تسجيل الدخول</a>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="footer">
+    <div class="footer-content">
+        <p class="footer-text">© 2025 بنك الخرطوم | iBOK</p>
+        <div class="social-links">
+            <a href="#" class="social-link" aria-label="Facebook">f</a>
+            <a href="#" class="social-link" aria-label="Twitter">𝕏</a>
+            <a href="#" class="social-link" aria-label="LinkedIn">in</a>
+            <a href="#" class="social-link" aria-label="Instagram">📷</a>
+        </div>
+    </div>
+</div>
+
+<script>
+const forgotForm = document.getElementById('forgotForm');
+const toast = document.getElementById('toast');
+
+function showToast(message, color='#4CAF50') {
+    toast.innerText = message;
+    toast.style.background = color;
+    toast.style.display = 'block';
+    setTimeout(()=> { toast.style.display = 'none'; }, 3000);
+}
+
+forgotForm.addEventListener('submit', function(e){
+    e.preventDefault();
+    const accountID = document.getElementById('accountID').value.trim();
+    if(!accountID){
+        showToast('الرجاء إدخال رقم الحساب أو البريد الإلكتروني', '#D32F2F');
+        return;
+    }
+    showToast('تم إرسال رمز استرجاع كلمة المرور بنجاح!');
+    setTimeout(()=>{ window.location.href = 'login.html'; }, 2000);
+});
+</script>
+
+</body>
+</html>

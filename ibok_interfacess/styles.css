@@ -1,0 +1,295 @@
+/* ==================================== */
+/* 1. الإعدادات الأساسية والخطوط */
+/* ==================================== */
+body {
+    font-family: 'Cairo', sans-serif;
+    direction: rtl;
+    margin: 0;
+    padding: 0;
+    background-color: #f8f8f8;
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect x="0" y="0" width="100" height="100" fill="%23f8f8f8"/><circle cx="50" cy="50" r="10" fill="none" stroke="%23f0f0f0" stroke-width="1"/></svg>');
+    background-repeat: repeat;
+    min-height: 100vh;
+}
+
+/* ==================================== */
+/* 2. تصميم الـ Header */
+/* ==================================== */
+.header {
+    background: linear-gradient(135deg, #d81e2b, #c21a25);
+    color: white;
+    padding: 25px 20px;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.header h1 {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 700;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+/* ==================================== */
+/* 3. تصميم حاوية الخيارات */
+/* ==================================== */
+.options-container {
+    max-width: 800px;
+    margin: 30px auto;
+    padding: 0 20px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 15px;
+}
+
+/* ==================================== */
+/* 4. تصميم عناصر الخيارات */
+/* ==================================== */
+.option-item {
+    display: flex;
+    align-items: center;
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+    position: relative;
+    overflow: hidden;
+}
+
+.option-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    border-color: #d81e2b;
+}
+
+.option-item input[type="checkbox"] {
+    display: none;
+}
+
+.option-item input[type="checkbox"]:checked + .custom-checkbox {
+    background-color: #d81e2b;
+    border-color: #d81e2b;
+}
+
+.option-item input[type="checkbox"]:checked + .custom-checkbox::after {
+    content: '✓';
+    color: white;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.option-item input[type="checkbox"]:checked ~ .option-text {
+    color: #d81e2b;
+    font-weight: 700;
+}
+
+.custom-checkbox {
+    width: 24px;
+    height: 24px;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    margin-left: 15px;
+    position: relative;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+}
+
+.option-icon {
+    font-size: 28px;
+    margin-left: 15px;
+    width: 40px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.option-text {
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+    transition: all 0.3s ease;
+    flex-grow: 1;
+}
+
+/* ==================================== */
+/* 5. تصميم الإشعارات (Toast) */
+/* ==================================== */
+.toast {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    padding: 20px 30px;
+    border-radius: 10px;
+    font-size: 18px;
+    font-weight: 600;
+    text-align: center;
+    z-index: 1000;
+    display: none;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
+    max-width: 80%;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -60%);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%);
+    }
+}
+
+/* ==================================== */
+/* 6. تصميم زر واتساب الثابت */
+/* ==================================== */
+.whatsapp-fixed {
+    position: fixed;
+    bottom: 25px;
+    left: 25px;
+    background: linear-gradient(135deg, #25D366, #128C7E);
+    color: white;
+    padding: 18px 25px;
+    border-radius: 50px;
+    text-decoration: none;
+    font-size: 18px;
+    font-weight: 700;
+    box-shadow: 0 6px 20px rgba(37, 211, 102, 0.4);
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 100;
+    border: none;
+    cursor: pointer;
+}
+
+.whatsapp-fixed:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(37, 211, 102, 0.6);
+    background: linear-gradient(135deg, #128C7E, #25D366);
+}
+
+.whatsapp-fixed:active {
+    transform: translateY(-1px);
+}
+
+.whatsapp-fixed span {
+    font-size: 24px;
+}
+
+/* ==================================== */
+/* 7. تصميم متجاوب للشاشات الصغيرة */
+/* ==================================== */
+@media (max-width: 768px) {
+    .header {
+        padding: 20px 15px;
+    }
+    
+    .header h1 {
+        font-size: 24px;
+    }
+    
+    .options-container {
+        grid-template-columns: 1fr;
+        gap: 12px;
+        padding: 0 15px;
+        margin: 20px auto;
+    }
+    
+    .option-item {
+        padding: 18px 15px;
+    }
+    
+    .option-icon {
+        font-size: 24px;
+        width: 35px;
+    }
+    
+    .option-text {
+        font-size: 16px;
+    }
+    
+    .toast {
+        font-size: 16px;
+        padding: 15px 25px;
+    }
+    
+    .whatsapp-fixed {
+        bottom: 20px;
+        left: 20px;
+        padding: 15px 20px;
+        font-size: 16px;
+    }
+    
+    .whatsapp-fixed span {
+        font-size: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .header h1 {
+        font-size: 22px;
+    }
+    
+    .option-item {
+        padding: 15px 12px;
+    }
+    
+    .option-icon {
+        font-size: 22px;
+        width: 30px;
+    }
+    
+    .option-text {
+        font-size: 15px;
+    }
+    
+    .custom-checkbox {
+        width: 20px;
+        height: 20px;
+        margin-left: 12px;
+    }
+}
+
+/* ==================================== */
+/* 8. تأثيرات إضافية وتحسينات */
+/* ==================================== */
+.option-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, transparent, rgba(216, 30, 43, 0.05));
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.option-item:hover::before {
+    opacity: 1;
+}
+
+/* إخفاء العناصر المرئية للمستخدمين */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+}

